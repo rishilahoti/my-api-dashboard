@@ -5,135 +5,181 @@ import { fetchData } from '../api/fetchData';
 import ReactJson from 'react-json-view';
 import { useTheme } from '../components/theme-context';
 
-interface Step {
-	id: number;
-	apiUrl: string;
-	method: 'GET' | 'POST';
-	body: string;
+interface NewKey {
+    id: number;
+    apiUrl: string;
+    method: 'GET' | 'POST';
+    body: string;
+    isCustomUrl: boolean;
 }
 
+//dropdown list of free APIs
+const freeApiUrls = [
+    'https://jsonplaceholder.typicode.com/posts',
+    'https://jsonplaceholder.typicode.com/comments',
+    'https://jsonplaceholder.typicode.com/albums',
+    'https://jsonplaceholder.typicode.com/photos',
+    'https://jsonplaceholder.typicode.com/todos',
+    'https://jsonplaceholder.typicode.com/users',
+    'https://reqres.in/api/users',
+    'https://catfact.ninja/fact',
+    'https://dog.ceo/api/breeds/image/random',
+];
+
 const Dashboard: React.FC = () => {
-	const { theme, toggleTheme } = useTheme();
-	const [steps, setSteps] = useState<Step[]>([
-		{
-			id: 1,
-			apiUrl: 'https://jsonplaceholder.typicode.com/posts',
-			method: 'GET',
-			body: '',
-		},
-	]);
-	const [results, setResults] = useState<any[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
+    const { theme, toggleTheme } = useTheme();
+    //state management for api url and default values
+    const [NewKeys, setNewKeys] = useState<NewKey[]>([
+        {
+            id: 1,
+            apiUrl: 'https://jsonplaceholder.typicode.com/posts',
+            method: 'GET',
+            body: '',
+            isCustomUrl: false,
+        },
+    ]);
+    const [results, setResults] = useState<any[]>([]); //store API results
+    const [loading, setLoading] = useState<boolean>(false); //manage loading state
+    const [error, setError] = useState<string | null>(null); //manage errors
 
-	const addStep = () => {
-		setSteps([
-			...steps,
-			{ id: steps.length + 1, apiUrl: '', method: 'GET', body: '' },
-		]);
-	};
+    const addNewKey = () => {
+        //for selecting new api url
+        setNewKeys([
+            ...NewKeys,
+            { id: NewKeys.length + 1, apiUrl: '', method: 'GET', body: '', isCustomUrl: false },
+        ]);
+    };
 
-	const handleInputChange = (
-		index: number,
-		event: React.ChangeEvent<
-			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-		>
-	) => {
-		const newSteps = steps.map((step, i) => {
-			if (i !== index) return step;
-			return { ...step, [event.target.name]: event.target.value };
-		});
-		setSteps(newSteps);
-	};
+    const handleInputChange = (
+        index: number,
+        event: React.ChangeEvent<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
+    ) => {
+        //api url update
+        const newNewKeys = NewKeys.map((NewKey, i) => {
+            if (i !== index) return NewKey;//if not the selected index, return the same url
+            return { ...NewKey, [event.target.name]: event.target.value };//update the selected url
+        });
+        setNewKeys(newNewKeys);
+    };
 
-	const executeWorkflow = async () => {
-		setLoading(true);
-		setError(null);
-		setResults([]);
+    const handleSelectChange = (
+        index: number,
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        const newNewKeys = NewKeys.map((NewKey, i) => {
+            if (i !== index) return NewKey;//if not the selected index, return the same url
+            const isCustomUrl = event.target.value === '';//check for custom url
+            return { ...NewKey, apiUrl: event.target.value, isCustomUrl };//updated url
+        });
+        setNewKeys(newNewKeys);
+    };
 
-		for (const step of steps) {
-			try {
-				const data =
-					step.method === 'POST' ? JSON.parse(step.body) : null;
-				const result = await fetchData(step.apiUrl, step.method, data);
-				setResults((prevResults) => [...prevResults, result]);
-			} catch (err: any) {
-				setError(err.message);
-				break;
-			}
-		}
-		setLoading(false);
-	};
+//main part and loop to call api and set api
+    const executeWorkflow = async () => {
+        setLoading(true);
+        setError(null);
+        setResults([]);
 
-	return (
-		<div className="p-4">
-			<button onClick={toggleTheme} className="button p-2 mb-4">
-				Toggle Theme
-			</button>
-			{steps.map((step, index) => (
-				<div key={step.id} className="mb-4">
-					<input
-						type="text"
-						name="apiUrl"
-						placeholder="API URL"
-						value={step.apiUrl}
-						onChange={(e) => handleInputChange(index, e)}
-						className="input border p-2 mb-2 w-full"
-					/>
-					<select
-						name="method"
-						value={step.method}
-						onChange={(e) => handleInputChange(index, e)}
-						className="select border p-2 mb-2 w-full"
-					>
-						<option value="GET">GET</option>
-						<option value="POST">POST</option>
-					</select>
-					{step.method === 'POST' && (
-						<textarea
-							name="body"
-							placeholder="Request Body"
-							value={step.body}
-							onChange={(e) => handleInputChange(index, e)}
-							className="textarea border p-2 w-full"
-						/>
-					)}
-				</div>
-			))}
-			<button onClick={addStep} className="button p-2 mr-2">
-				Add Step
-			</button>
-			<button onClick={executeWorkflow} className="button p-2">
-				Execute Workflow
-			</button>
-			{loading && <p>Loading...</p>}
-			{error && <p className="text-red-500">{error}</p>}
-			{results.length > 0 && (
-				<div className="mt-4">
-					<h3 className="text-lg font-bold mb-2">Results:</h3>
-					<div className="pre p-4 overflow-x-auto max-h-96 overflow-y-auto">
-						{results.map((result, index) => (
-							<ReactJson
-								key={index}
-								src={result}
-								theme={
-									theme === 'light' ? 'rjv-default' : 'tube'
-								}
-								style={{
-									backgroundColor:
-										theme === 'light' ? '#fff' : '#1d2021',
-									color:
-										theme === 'light' ? '#000' : '#abb2bf',
-								}}
-								collapsed={2}
-								enableClipboard={false}
-							/>
-						))}
-					</div>
-				</div>
-			)}
-		</div>
-	);
+        for (const NewKey of NewKeys) {
+            try {
+                const data =
+                    NewKey.method === 'POST' ? JSON.parse(NewKey.body) : null;
+                const result = await fetchData(NewKey.apiUrl, NewKey.method, data);
+                setResults((prevResults) => [...prevResults, result]);
+            } catch (err: any) {
+                setError(err.message);
+                break;
+            }
+        }
+        setLoading(false);
+    };
+
+    return (
+        <div className="p-4">
+            <button onClick={toggleTheme} className="button p-2 mb-4 rounded-lg">
+                Toggle Theme
+            </button>
+            {NewKeys.map((NewKey, index) => (
+                <div key={NewKey.id} className="mb-4">
+                    <select
+                        name="apiUrl"
+                        value={NewKey.isCustomUrl ? '' : NewKey.apiUrl}
+                        onChange={(e) => handleSelectChange(index, e)}
+                        className="select border p-2 mb-2 w-full rounded-lg"
+                    >
+                        {freeApiUrls.map((url) => (
+                            <option key={url} value={url}>
+                                {url}
+                            </option>
+                        ))}
+                        <option value="">Custom URL</option>
+                    </select>
+                    {NewKey.isCustomUrl && (
+                        <input
+                            type="text"
+                            name="apiUrl"
+                            placeholder="API URL"
+                            value={NewKey.apiUrl}
+                            onChange={(e) => handleInputChange(index, e)}
+                            className="input border p-2 mb-2 w-full rounded-lg"
+                        />
+                    )}
+                    <select
+                        name="method"
+                        value={NewKey.method}
+                        onChange={(e) => handleInputChange(index, e)}
+                        className="select border p-2 mb-2 w-full rounded-lg"
+                    >
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                    </select>
+                    {NewKey.method === 'POST' && (
+                        <textarea
+                            name="body"
+                            placeholder="Request Body"
+                            value={NewKey.body}
+                            onChange={(e) => handleInputChange(index, e)}
+                            className="textarea border p-2 w-full rounded-lg"
+                        />
+                    )}
+                </div>
+            ))}
+            <button onClick={addNewKey} className="button p-2 mr-2 rounded-lg">
+                Add NewKey
+            </button>
+            <button onClick={executeWorkflow} className="button p-2 rounded-lg">
+                Execute Workflow
+            </button>
+            {loading && <p>Loading...</p>}
+            {error && <p className="text-red-500">{error}</p>}
+            {results.length > 0 && (
+                <div className="mt-4">
+                    <h3 className="text-lg font-bold mb-2">Results:</h3>
+                    <div className="pre p-4 overflow-x-auto max-h-96 overflow-y-auto rounded-lg">
+                        {results.map((result, index) => (
+                            <ReactJson
+                                key={index}
+                                src={result}
+                                theme={
+                                    theme === 'light' ? 'rjv-default' : 'tube'
+                                }
+                                style={{
+                                    backgroundColor:
+                                        theme === 'light' ? '#fff' : '#1d2021',
+                                    color:
+                                        theme === 'light' ? '#000' : '#abb2bf',
+                                }}
+                                collapsed={2}
+                                enableClipboard={true}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default Dashboard;
