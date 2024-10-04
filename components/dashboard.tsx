@@ -2,6 +2,8 @@
 'use client';
 import React, { useState } from 'react';
 import { fetchData } from '../api/fetchData';
+import ReactJson from 'react-json-view';
+import { useTheme } from '../components/theme-context';
 
 interface Step {
 	id: number;
@@ -11,6 +13,7 @@ interface Step {
 }
 
 const Dashboard: React.FC = () => {
+	const { theme, toggleTheme } = useTheme();
 	const [steps, setSteps] = useState<Step[]>([
 		{
 			id: 1,
@@ -64,6 +67,9 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<div className="p-4">
+			<button onClick={toggleTheme} className="button p-2 mb-4">
+				Toggle Theme
+			</button>
 			{steps.map((step, index) => (
 				<div key={step.id} className="mb-4">
 					<input
@@ -105,9 +111,25 @@ const Dashboard: React.FC = () => {
 			{results.length > 0 && (
 				<div className="mt-4">
 					<h3 className="text-lg font-bold mb-2">Results:</h3>
-					<pre className="pre p-4 overflow-x-auto max-h-96 overflow-y-auto">
-						{JSON.stringify(results, null, 2)}
-					</pre>
+					<div className="pre p-4 overflow-x-auto max-h-96 overflow-y-auto">
+						{results.map((result, index) => (
+							<ReactJson
+								key={index}
+								src={result}
+								theme={
+									theme === 'light' ? 'rjv-default' : 'ocean'
+								}
+								style={{
+									backgroundColor:
+										theme === 'light' ? '#fff' : '#1d2021',
+									color:
+										theme === 'light' ? '#000' : '#abb2bf',
+								}}
+								collapsed={2}
+								enableClipboard={false}
+							/>
+						))}
+					</div>
 				</div>
 			)}
 		</div>
