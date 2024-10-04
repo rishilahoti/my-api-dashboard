@@ -11,10 +11,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 		<html lang="en">
 			<body>
 				<div className="min-h-screen flex flex-col">
-					<header className="bg-blue-600 text-white p-4">
-						API Dashboard
-					</header>
+					<header className="header p-4">API Dashboard</header>
 					<main className="flex-grow p-4">{children}</main>
+					<footer className="footer p-4 text-center">
+						Footer Content
+					</footer>
 				</div>
 			</body>
 		</html>

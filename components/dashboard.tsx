@@ -48,14 +48,12 @@ const Dashboard: React.FC = () => {
 		setError(null);
 		setResults([]);
 
-
 		for (const step of steps) {
 			try {
 				const data =
 					step.method === 'POST' ? JSON.parse(step.body) : null;
 				const result = await fetchData(step.apiUrl, step.method, data);
 				setResults((prevResults) => [...prevResults, result]);
-
 			} catch (err: any) {
 				setError(err.message);
 				break;
@@ -74,13 +72,13 @@ const Dashboard: React.FC = () => {
 						placeholder="API URL"
 						value={step.apiUrl}
 						onChange={(e) => handleInputChange(index, e)}
-						className="border p-2 mb-2 w-full"
+						className="input border p-2 mb-2 w-full"
 					/>
 					<select
 						name="method"
 						value={step.method}
 						onChange={(e) => handleInputChange(index, e)}
-						className="border p-2 mb-2 w-full"
+						className="select border p-2 mb-2 w-full"
 					>
 						<option value="GET">GET</option>
 						<option value="POST">POST</option>
@@ -91,21 +89,15 @@ const Dashboard: React.FC = () => {
 							placeholder="Request Body"
 							value={step.body}
 							onChange={(e) => handleInputChange(index, e)}
-							className="border p-2 w-full"
+							className="textarea border p-2 w-full"
 						/>
 					)}
 				</div>
 			))}
-			<button
-				onClick={addStep}
-				className="bg-blue-500 text-white p-2 mr-2"
-			>
+			<button onClick={addStep} className="button p-2 mr-2">
 				Add Step
 			</button>
-			<button
-				onClick={executeWorkflow}
-				className="bg-green-500 text-white p-2"
-			>
+			<button onClick={executeWorkflow} className="button p-2">
 				Execute Workflow
 			</button>
 			{loading && <p>Loading...</p>}
@@ -113,7 +105,7 @@ const Dashboard: React.FC = () => {
 			{results.length > 0 && (
 				<div className="mt-4">
 					<h3 className="text-lg font-bold mb-2">Results:</h3>
-					<pre className="bg-gray-100 p-4">
+					<pre className="pre p-4 overflow-x-auto max-h-96 overflow-y-auto">
 						{JSON.stringify(results, null, 2)}
 					</pre>
 				</div>
