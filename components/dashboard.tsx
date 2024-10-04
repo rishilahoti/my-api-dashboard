@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
 								key={index}
 								src={result}
 								theme={
-									theme === 'light' ? 'rjv-default' : 'ocean'
+									theme === 'light' ? 'rjv-default' : 'tube'
 								}
 								style={{
 									backgroundColor:
