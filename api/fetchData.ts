@@ -1,57 +1,75 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// import axios from 'axios';
-
-// export const fetchData = async (
+// export const fetchData = async <T>(
 // 	url: string,
 // 	method: 'GET' | 'POST' = 'GET',
-// 	data: any = null
-// ) => {
+// 	data: T | null = null
+// ): Promise<T> => {
 // 	try {
-// 		const response = await axios({
+// 		const options: RequestInit = {
 // 			method,
-// 			url,
-// 			data,
-// 		});
-// 		return response.data;
-// 	} catch (error: any) {
-// 		throw new Error(error.response ? error.response.data : error.message);
+// 			headers: {
+// 				'Content-Type': 'application/json',
+// 			},
+// 		};
+
+// 		if (method === 'POST' && data) {
+// 			options.body = JSON.stringify(data);
+// 		}
+
+// 		const response = await fetch(url, options);
+
+// 		if (!response.ok) {
+// 			const errorData = await response.json().catch(() => ({
+// 				message: response.statusText,
+// 			}));
+// 			throw new Error(errorData.message || `Error: ${response.status}`);
+// 		}
+
+// 		return (await response.json()) as T;
+// 	} catch (error) {
+// 		console.error('Fetch error:', error);
+// 		throw new Error(
+// 			(error as Error).message || 'An error occurred during the fetch'
+// 		);
 // 	}
 // };
 
-export const fetchData = async (
-    url: string,
-    method: 'GET' | 'POST' = 'GET',
-    data: any = null
-) => {
-    try {
-        const options: RequestInit = {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        };
+//optmization with chat gpt
+//type handeling U was added to the fetchData function,  to allow for separate types for request data and response.
+//It defaults to undefined when no data is provided (for GET requests).
 
-        if (method === 'POST' && data) {
-            options.body = JSON.stringify(data);
-        }
+export const fetchData = async <T, U = undefined>(
+	url: string,
+	method: 'GET' | 'POST' = 'GET',
+	data?: U
+): Promise<T> => {
+	try {
+		const response = await fetch(url, {
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			...(method === 'POST' && data
+				? { body: JSON.stringify(data) }
+				: {}),
+		});
 
-        const response = await fetch(url, options);
+		const contentType = response.headers.get('Content-Type');
 
-        if (!response.ok) {
-            // Check if response is not OK
-            const errorData = await response.json().catch(() => {
-                // If parsing JSON fails, return a generic message
-                return { message: response.statusText };
-            });
-            throw new Error(errorData.message || `Error: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error: any) {
-        // Log the error for debugging purposes
-        console.error('Fetch error:', error);
-        throw new Error(error.message || 'An error occurred during the fetch');
-    }
+		if (!response.ok) {
+			const errorMessage = contentType?.includes('application/json')
+				? (await response.json()).message
+				: response.statusText;
+			throw new Error(errorMessage || `Error: ${response.status}`);
+		}
+		//fetchData function now returns an empty object when the response is not JSON, instead of throwing an error.
+		return contentType?.includes('application/json')
+			? await response.json()
+			: ({} as T); // Return empty object if there's no JSON response
+	} catch (error) {
+		console.error('Fetch error:', error);
+		throw new Error(
+			(error as Error).message ||
+				'An unexpected error occurred during the fetch'
+		);
+	}
 };
-
-
