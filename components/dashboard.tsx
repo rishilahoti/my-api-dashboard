@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
 			isCustomUrl: false,
 		},
 	]);
-	const [results, setResults] = useState<any[]>([]);
+	const [results, setResults] = useState<unknown[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +90,7 @@ const Dashboard: React.FC = () => {
 			for (const key of newKeys) {
 				const data =
 					key.method === 'POST' ? JSON.parse(key.body || '{}') : null;
-				const result = await fetchData<any>(
+				const result = await fetchData<unknown>(
 					key.apiUrl,
 					key.method,
 					data
